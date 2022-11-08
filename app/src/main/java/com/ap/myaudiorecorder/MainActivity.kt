@@ -4,12 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.ap.audiorecorder.AudioRecorder
+import com.ap.audiorecorder.rememberAudioRecorderState
 import com.ap.myaudiorecorder.ui.theme.MyAudioRecorderTheme
 
 class MainActivity : ComponentActivity() {
@@ -22,7 +24,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Greeting("Android")
+                    Recorder()
                 }
             }
         }
@@ -30,14 +32,18 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
+private fun Recorder() {
+    val recorderState = rememberAudioRecorderState()
+    AudioRecorder(
+        modifier = Modifier.fillMaxWidth(),
+        recorderState = recorderState,
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     MyAudioRecorderTheme {
-        Greeting("Android")
+        Recorder()
     }
 }
