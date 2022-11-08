@@ -14,9 +14,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.concurrent.timerTask
 
 interface AudioRecorderState {
     val recorder: MediaRecorder
@@ -68,10 +71,12 @@ class AudioRecorderStateImpl(
     override val recordFilePath = mutableStateOf("${context.externalCacheDir}")
     override val isMicEnabled = mutableStateOf(checkIsMicEnabled(context))
 
-    override val recordDuration = mutableStateOf("0")
+    override val recordDuration = mutableStateOf("")
     override val isRecording = mutableStateOf(false)
 
     private var startTime: Long = 0L
+    private var recordStatsJob: Job? = null
+    private var timer = Timer()
 
     override val control: AudioRecorderControl = object : AudioRecorderControl {
         override fun start() {
@@ -81,8 +86,16 @@ class AudioRecorderStateImpl(
             val currentActivity = context.findActivity() ?: return
 
             if (!isAudioRecordPermissionGranted(currentActivity)) {
-                if (shouldShowRequestPermissionRationale(currentActivity, Manifest.permission.RECORD_AUDIO)) {
-                    Toast.makeText(currentActivity, "App requires access to audio", Toast.LENGTH_SHORT).show()
+                if (shouldShowRequestPermissionRationale(
+                        currentActivity,
+                        Manifest.permission.RECORD_AUDIO
+                    )
+                ) {
+                    Toast.makeText(
+                        currentActivity,
+                        "App requires access to audio",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 ActivityCompat.requestPermissions(
                     currentActivity,
@@ -92,8 +105,12 @@ class AudioRecorderStateImpl(
                 return
             }
 
-            if(!isMicEnabled.value){
-                Toast.makeText(currentActivity, "Device does not have mic to record audio", Toast.LENGTH_SHORT).show()
+            if (!isMicEnabled.value) {
+                Toast.makeText(
+                    currentActivity,
+                    "Device does not have mic to record audio",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return
             }
 
@@ -104,18 +121,36 @@ class AudioRecorderStateImpl(
             recorder.setOutputFile("${recordFilePath.value}${File.separator}${recordFileName}.3gp")
             recorder.prepare()
             recorder.start()
-            isRecording.value = true
-            setRecordStartTime()
+            onRecordingStarted()
+
         }
 
         override fun stop() {
             if (isRecording.value) {
                 recorder.stop()
-                isRecording.value = false
                 recorder.reset()
             }
-            resetRecordStartTime()
+            onRecordingStopped()
         }
+
+    }
+
+    private fun onRecordingStopped() {
+        isRecording.value = false
+        resetRecordStartTime()
+        recordStatsJob?.cancel()
+        recordDuration.value = ""
+        timer.cancel()
+    }
+
+    private fun onRecordingStarted() {
+        isRecording.value = true
+        setRecordStartTime()
+        timer = Timer()
+        val timerTask = timerTask {
+            updateRecordDuration()
+        }
+        timer.scheduleAtFixedRate(timerTask, 0, 1000)
 
     }
 
@@ -159,11 +194,15 @@ class AudioRecorderStateImpl(
             Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
 
-    private fun setRecordStartTime(){
+    private fun setRecordStartTime() {
         startTime = System.currentTimeMillis()
     }
 
-    private fun resetRecordStartTime(){
+    private fun resetRecordStartTime() {
         startTime = 0
+    }
+
+    private fun updateRecordDuration() {
+        recordDuration.value = (System.currentTimeMillis() - startTime).formatMillis()
     }
 }
