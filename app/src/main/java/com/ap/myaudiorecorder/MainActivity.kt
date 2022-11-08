@@ -3,12 +3,13 @@ package com.ap.myaudiorecorder
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.ap.audiorecorder.AudioRecorder
 import com.ap.audiorecorder.rememberAudioRecorderState
@@ -34,10 +35,29 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun Recorder() {
     val recorderState = rememberAudioRecorderState()
-    AudioRecorder(
-        modifier = Modifier.fillMaxWidth(),
-        recorderState = recorderState,
-    )
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            AudioRecorder(
+                recorderState = recorderState,
+            )
+        }
+        Row(
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Box() {
+                Text(
+                    text = recorderState.recordDuration.value,
+
+                )
+            }
+
+        }
+    }
+
+
 }
 
 @Preview(showBackground = true)
