@@ -1,26 +1,37 @@
 package com.ap.audiorecorder
 
 import android.util.Log
+import androidx.appcompat.widget.TooltipCompat
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Card
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import com.ap.tooltip.Tooltip
 
 @Composable
 fun AudioRecorder(
@@ -28,8 +39,8 @@ fun AudioRecorder(
     modifier: Modifier = Modifier,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
 ) {
-    if(!recorderState.isMicEnabled.value){
-        Log.d("AudioRecorder","Device does not have mic")
+    if (!recorderState.isMicEnabled.value) {
+        Log.d("AudioRecorder", "Device does not have mic")
         return
     }
 
@@ -58,23 +69,34 @@ fun AudioRecorderView(
     modifier: Modifier = Modifier,
     control: AudioRecorderControl
 ) {
-    var longPressActive by remember { mutableStateOf(false) }
-
     Column(
         modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
+        MicView(modifier, control)
+    }
+}
 
-        Spacer(modifier = modifier.height(24.dp))
+@Composable
+private fun MicView(
+    modifier: Modifier,
+    control: AudioRecorderControl
+) {
+    var longPressActive by remember { mutableStateOf(false) }
+    Spacer(modifier = modifier.height(24.dp))
+
+    Box {
+        val showTooltip = remember { mutableStateOf(false) }
         Box(
             modifier = modifier
-                .size(80.dp)
+                .size(48.dp)
                 .clip(CircleShape)
                 .background(
-                    color = if (longPressActive) MaterialTheme.colors.error.copy(alpha = 0.2f) else
-                        MaterialTheme.colors.error
+                    color = if (longPressActive) Color(0xff00897B).copy(alpha = 0.2f) else
+                        Color(0xff00897B)
                 )
-                .padding(all = 16.dp)
+                .padding(all = 12.dp)
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onLongPress = {
@@ -83,6 +105,7 @@ fun AudioRecorderView(
                         },
                         onPress = {
                             awaitRelease()
+                            showTooltip.value = !longPressActive
                             longPressActive = false
                             control.stop()
                         }
@@ -91,18 +114,25 @@ fun AudioRecorderView(
                 },
             contentAlignment = Alignment.Center
         ) {
+
             Icon(
                 painter = painterResource(id = R.drawable.ic_mic_24),
                 contentDescription = "record",
-                tint = MaterialTheme.colors.surface,
+                tint = Color.White,
                 modifier = modifier.fillMaxSize()
             )
         }
-        Spacer(modifier = modifier.height(8.dp))
-        Text(text = "Hold and record")
-        Spacer(modifier = modifier.height(24.dp))
-    }
 
+        Tooltip(
+            visibility = showTooltip
+        ) {
+            // Tooltip content goes here.
+            Text(
+                text = "Hold to record, release to save",
+                fontSize = 12.sp
+            )
+        }
+    }
 }
 
 interface AudioRecorderControl {
