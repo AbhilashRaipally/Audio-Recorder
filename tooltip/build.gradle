@@ -1,11 +1,10 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
-    id 'kotlin-android-extensions'
 }
 
 android {
-    namespace 'com.ap.audiorecorder'
+    namespace 'com.ap.tooltip'
     compileSdk 33
 
     defaultConfig {
@@ -38,7 +37,6 @@ android {
 }
 
 dependencies {
-    implementation project(':tooltip')
     implementation "androidx.core:core-ktx:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'com.google.android.material:material:1.7.0'
@@ -51,8 +49,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
-
-    implementation "com.google.accompanist:accompanist-permissions:0.21.1-beta"
 
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
