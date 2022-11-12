@@ -1,37 +1,37 @@
 package com.ap.audiorecorder
 
 import android.util.Log
-import androidx.appcompat.widget.TooltipCompat
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Card
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.ap.tooltip.Tooltip
+
+interface AudioRecorderControl {
+    fun start()
+    fun stop()
+}
 
 @Composable
 fun AudioRecorder(
@@ -46,7 +46,7 @@ fun AudioRecorder(
 
     AudioRecorderView(
         modifier = modifier,
-        control = recorderState.control
+        state = recorderState
     )
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -67,62 +67,40 @@ fun AudioRecorder(
 @Composable
 fun AudioRecorderView(
     modifier: Modifier = Modifier,
-    control: AudioRecorderControl
+    state: AudioRecorderState
 ) {
     Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = modifier.fillMaxWidth()
     ) {
-        MicView(modifier, control)
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Box(
+                Modifier.padding(5.dp)
+            ) {
+                if(state.isRecording.value){
+                    MicLeftExpandedView(state = state)
+                }
+            }
+            Box(
+                Modifier.padding(5.dp)
+                    .align(Alignment.CenterEnd),
+            ) {
+                MicView(modifier = modifier, state = state)
+            }
+
+        }
     }
 }
 
 @Composable
 private fun MicView(
     modifier: Modifier,
-    control: AudioRecorderControl
+    state: AudioRecorderState
 ) {
     var longPressActive by remember { mutableStateOf(false) }
     Spacer(modifier = modifier.height(24.dp))
 
     Box {
         val showTooltip = remember { mutableStateOf(false) }
-        Box(
-            modifier = modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(
-                    color = if (longPressActive) Color(0xff00897B).copy(alpha = 0.2f) else
-                        Color(0xff00897B)
-                )
-                .padding(all = 12.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onLongPress = {
-                            longPressActive = true
-                            control.start()
-                        },
-                        onPress = {
-                            awaitRelease()
-                            showTooltip.value = !longPressActive
-                            longPressActive = false
-                            control.stop()
-                        }
-
-                    )
-                },
-            contentAlignment = Alignment.Center
-        ) {
-
-            Icon(
-                painter = painterResource(id = R.drawable.ic_mic_24),
-                contentDescription = "record",
-                tint = Color.White,
-                modifier = modifier.fillMaxSize()
-            )
-        }
-
         Tooltip(
             visibility = showTooltip
         ) {
@@ -132,24 +110,79 @@ private fun MicView(
                 fontSize = 12.sp
             )
         }
-    }
-}
 
-interface AudioRecorderControl {
-    fun start()
-    fun stop()
+        Box(
+            modifier = modifier
+                .scale(if(longPressActive) 1.75F else 1F)
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(color = Color(0xff00897B))
+                .padding(all = 12.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onLongPress = {
+                            longPressActive = true
+                            state.control.start()
+                        },
+                        onPress = {
+                            awaitRelease()
+                            showTooltip.value = !longPressActive
+                            longPressActive = false
+                            state.control.stop()
+                        }
+
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                modifier = Modifier.fillMaxSize(),
+                painter = painterResource(id = R.drawable.ic_mic_24),
+                contentDescription = "record",
+                tint = Color.White
+            )
+        }
+    }
 }
 
 @Composable
-@Preview(showBackground = true)
-private fun Preview() {
-    val control = object : AudioRecorderControl {
-        override fun start() {}
-        override fun stop() {}
-    }
-    Surface {
-        AudioRecorderView(
-            control = control
-        )
+private fun MicLeftExpandedView(
+    modifier: Modifier = Modifier,
+    state: AudioRecorderState
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colors.surface,
+        border = BorderStroke(2.dp, MaterialTheme.colors.surface),
+        elevation = 3.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .height(48.dp)
+                .padding(2.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(modifier = modifier.padding(5.dp)) {
+                Blinking { alpha ->
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_mic_24),
+                        tint = Color.Red,
+                        contentDescription = "mic",
+                        modifier = Modifier.alpha(alpha = alpha)
+                    )
+                }
+            }
+
+            Row(
+                modifier = modifier.padding(5.dp)
+            ) {
+                Text(
+                    text = state.recordDuration.value,
+                )
+            }
+
+        }
     }
 }
