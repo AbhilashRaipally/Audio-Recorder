@@ -42,8 +42,6 @@ fun Blinking(content: @Composable (alpha: Float) -> Unit) {
             repeatMode = RepeatMode.Reverse
         )
     )
-    Log.d("TEST", "test val: $test")
-
     Box() {
         content(test)
     }

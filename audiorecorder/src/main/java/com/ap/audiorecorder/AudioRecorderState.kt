@@ -26,6 +26,8 @@ interface AudioRecorderState {
     val recordFilePath: State<String>
     val recordDuration: State<String>
     val isRecording: State<Boolean>
+    val isRecordingSaved: State<Boolean>
+    val recordedFileUrl: State<String>
     val control: AudioRecorderControl
     val isMicEnabled: State<Boolean>
 
@@ -73,6 +75,8 @@ class AudioRecorderStateImpl(
 
     override val recordDuration = mutableStateOf("")
     override val isRecording = mutableStateOf(false)
+    override val isRecordingSaved= mutableStateOf(false)
+    override val recordedFileUrl = mutableStateOf("")
 
     private var startTime: Long = 0L
     private var recordStatsJob: Job? = null
@@ -114,11 +118,13 @@ class AudioRecorderStateImpl(
                 return
             }
 
+            recordedFileUrl.value = "${recordFilePath.value}${File.separator}${recordFileName}.mp3"
+
             recorder.setAudioSource(MediaRecorder.AudioSource.MIC)
             recorder.setAudioSamplingRate(16000)
             recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
             recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-            recorder.setOutputFile("${recordFilePath.value}${File.separator}${recordFileName}.3gp")
+            recorder.setOutputFile(recordedFileUrl.value)
             recorder.prepare()
             recorder.start()
             onRecordingStarted()
@@ -137,6 +143,7 @@ class AudioRecorderStateImpl(
 
     private fun onRecordingStopped() {
         isRecording.value = false
+        isRecordingSaved.value = true
         resetRecordStartTime()
         recordStatsJob?.cancel()
         recordDuration.value = ""
@@ -145,6 +152,7 @@ class AudioRecorderStateImpl(
 
     private fun onRecordingStarted() {
         isRecording.value = true
+        isRecordingSaved.value = false
         setRecordStartTime()
         timer = Timer()
         val timerTask = timerTask {
