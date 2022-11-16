@@ -1,17 +1,25 @@
 package com.ap.myaudiorecorder
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import com.ap.audioplayer.Audio
+import com.ap.audioplayer.rememberAudioPlayerState
+import com.ap.audioplayer.view.AudioPlayer
+import com.ap.audioplayer.view.AudioPlayerController
 import com.ap.audiorecorder.AudioRecorder
+import com.ap.audiorecorder.AudioRecorderState
 import com.ap.audiorecorder.rememberAudioRecorderState
 import com.ap.myaudiorecorder.ui.theme.MyAudioRecorderTheme
 
@@ -25,7 +33,35 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Recorder()
+                    val recorderState = rememberAudioRecorderState()
+
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .weight(1F)
+                        ) {
+                            if (recorderState.isRecordingSaved.value) {
+                                val audioData = Audio(
+                                    title = "Recorded Audio",
+                                    url = recorderState.recordedFileUrl.value,
+                                    description = "",
+                                    subtitle = "",
+                                    thumb = ""
+                                )
+                                Player(audioData)
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Bottom,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Recorder(recorderState)
+                        }
+                    }
+
                 }
             }
         }
@@ -33,25 +69,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun Recorder() {
-    val recorderState = rememberAudioRecorderState()
+private fun Recorder(recorderState: AudioRecorderState) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            Text(
-                text = recorderState.recordDuration.value,
-            )
-        }
-    }
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -64,10 +86,24 @@ private fun Recorder() {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun DefaultPreview() {
-    MyAudioRecorderTheme {
-        Recorder()
+private fun Player(
+    data: Audio,
+) {
+    val playerState = rememberAudioPlayerState()
+
+    val context = LocalContext.current
+    LaunchedEffect(data) {
+        playerState.setSource(data, context)
+    }
+    AudioPlayer(
+        modifier = Modifier
+            .fillMaxWidth(),
+        playerState = playerState,
+    ) {
+        AudioPlayerController(
+            state = playerState,
+            title = data.title
+        )
     }
 }

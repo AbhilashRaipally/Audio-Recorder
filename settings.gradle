@@ -16,3 +16,4 @@ rootProject.name = "My Audio Recorder"
 include ':app'
 include ':audiorecorder'
 include ':tooltip'
+include ':audioplayer'
