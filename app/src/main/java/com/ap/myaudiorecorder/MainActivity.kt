@@ -21,6 +21,7 @@ import com.ap.audioplayer.view.AudioPlayerController
 import com.ap.audiorecorder.AudioRecorder
 import com.ap.audiorecorder.AudioRecorderState
 import com.ap.audiorecorder.rememberAudioRecorderState
+import com.ap.audiorecorder.swipeToDismiss
 import com.ap.myaudiorecorder.ui.theme.MyAudioRecorderTheme
 
 class MainActivity : ComponentActivity() {
@@ -39,7 +40,8 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize()
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .weight(1F)
                         ) {
                             if (recorderState.isRecordingSaved.value) {
@@ -50,7 +52,12 @@ class MainActivity : ComponentActivity() {
                                     subtitle = "",
                                     thumb = ""
                                 )
-                                Player(audioData)
+                                Box(
+                                    modifier = Modifier
+                                        .swipeToDismiss { recorderState.deleteRecording() }
+                                ) {
+                                    Player(audioData)
+                                }
                             }
                         }
                         Row(
@@ -88,7 +95,7 @@ private fun Recorder(recorderState: AudioRecorderState) {
 
 @Composable
 private fun Player(
-    data: Audio,
+    data: Audio
 ) {
     val playerState = rememberAudioPlayerState()
 
