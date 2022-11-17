@@ -142,8 +142,10 @@ class AudioRecorderStateImpl(
     }
 
     private fun onRecordingStopped() {
-        isRecording.value = false
-        isRecordingSaved.value = true
+        if(isRecording.value){
+            isRecording.value = false
+            isRecordingSaved.value = true
+        }
         resetRecordStartTime()
         recordStatsJob?.cancel()
         recordDuration.value = ""

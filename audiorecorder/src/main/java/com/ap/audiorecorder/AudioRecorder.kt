@@ -7,10 +7,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,12 +73,13 @@ fun AudioRecorderView(
             Box(
                 Modifier.padding(5.dp)
             ) {
-                if(state.isRecording.value){
+                if (state.isRecording.value) {
                     MicLeftExpandedView(state = state)
                 }
             }
             Box(
-                Modifier.padding(5.dp)
+                Modifier
+                    .padding(5.dp)
                     .align(Alignment.CenterEnd),
             ) {
                 MicView(modifier = modifier, state = state)
@@ -91,6 +89,7 @@ fun AudioRecorderView(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun MicView(
     modifier: Modifier,
@@ -99,7 +98,11 @@ private fun MicView(
     var longPressActive by remember { mutableStateOf(false) }
     Spacer(modifier = modifier.height(24.dp))
 
-    Box {
+    Box(
+        modifier = Modifier.swipeToDismiss {
+            Log.d("TEST", "remove file:${state.recordFilePath}")
+        }
+    ) {
         val showTooltip = remember { mutableStateOf(false) }
         Tooltip(
             visibility = showTooltip
@@ -112,8 +115,8 @@ private fun MicView(
         }
 
         Box(
-            modifier = modifier
-                .scale(if(longPressActive) 1.75F else 1F)
+            modifier = Modifier
+                .scale(if (longPressActive) 1.75F else 1F)
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(color = Color(0xff00897B))
@@ -130,7 +133,6 @@ private fun MicView(
                             longPressActive = false
                             state.control.stop()
                         }
-
                     )
                 },
             contentAlignment = Alignment.Center
@@ -165,14 +167,12 @@ private fun MicLeftExpandedView(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(modifier = modifier.padding(5.dp)) {
-                Blinking { alpha ->
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_mic_24),
-                        tint = Color.Red,
-                        contentDescription = "mic",
-                        modifier = Modifier.alpha(alpha = alpha)
-                    )
-                }
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_mic_24),
+                    tint = Color.Red,
+                    contentDescription = "mic",
+                    modifier = Modifier.blinking()
+                )
             }
 
             Row(
@@ -180,6 +180,11 @@ private fun MicLeftExpandedView(
             ) {
                 Text(
                     text = state.recordDuration.value,
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Slide to cancel",
+                    color = Color.LightGray
                 )
             }
 
