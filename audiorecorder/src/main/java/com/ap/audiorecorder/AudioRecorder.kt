@@ -96,13 +96,7 @@ private fun MicView(
     state: AudioRecorderState
 ) {
     var longPressActive by remember { mutableStateOf(false) }
-    Spacer(modifier = modifier.height(24.dp))
-
-    Box(
-        modifier = Modifier.swipeToDismiss {
-            Log.d("TEST", "remove file:${state.recordFilePath}")
-        }
-    ) {
+    Box {
         val showTooltip = remember { mutableStateOf(false) }
         Tooltip(
             visibility = showTooltip
@@ -113,7 +107,6 @@ private fun MicView(
                 fontSize = 12.sp
             )
         }
-
         Box(
             modifier = Modifier
                 .scale(if (longPressActive) 1.75F else 1F)

@@ -60,8 +60,8 @@ private fun AudioPlayerView(
     }
     Card(
         shape = RoundedCornerShape(15.dp),
-        modifier = modifier.padding(8.dp)
-            .defaultPlayerTapGestures(playerState, centerX),
+        modifier = modifier.padding(8.dp),
+            //.defaultPlayerTapGestures(playerState, centerX),
         backgroundColor = Color(0xff00897B)
     ) {
         controller()

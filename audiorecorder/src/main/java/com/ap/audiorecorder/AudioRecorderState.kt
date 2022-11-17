@@ -17,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.timerTask
@@ -32,6 +33,7 @@ interface AudioRecorderState {
     val isMicEnabled: State<Boolean>
 
     fun setFilePath(path: String)
+    fun deleteRecording()
 }
 
 @Composable
@@ -75,7 +77,7 @@ class AudioRecorderStateImpl(
 
     override val recordDuration = mutableStateOf("")
     override val isRecording = mutableStateOf(false)
-    override val isRecordingSaved= mutableStateOf(false)
+    override val isRecordingSaved = mutableStateOf(false)
     override val recordedFileUrl = mutableStateOf("")
 
     private var startTime: Long = 0L
@@ -142,7 +144,7 @@ class AudioRecorderStateImpl(
     }
 
     private fun onRecordingStopped() {
-        if(isRecording.value){
+        if (isRecording.value) {
             isRecording.value = false
             isRecordingSaved.value = true
         }
@@ -166,6 +168,18 @@ class AudioRecorderStateImpl(
 
     override fun setFilePath(path: String) {
         recordFilePath.value = path
+    }
+
+    override fun deleteRecording() {
+        try {
+            val file = File(recordedFileUrl.value)
+            val result = file.delete()
+            if (!result) {
+                Log.d(TAG, "Deletion failed.")
+            }
+        } catch (e: Exception) {
+            Log.d(TAG, "Deletion failed.+$e")
+        }
     }
 
     override fun onError(recorder: MediaRecorder?, what: Int, extra: Int) {
